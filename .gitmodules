@@ -1,0 +1,4 @@
+[submodule "freqtrade-ui"]
+	path = freqtrade-ui
+	url = https://github.com/Arthurrr29/frequi.git
+	branch = codex/zh-cn-i18n
