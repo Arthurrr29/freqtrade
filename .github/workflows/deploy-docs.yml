@@ -17,6 +17,8 @@ concurrency:
 
 jobs:
   build-docs:
+    # Only the upstream repository owns the shared gh-pages documentation history.
+    if: ${{ github.repository == 'freqtrade/freqtrade' }}
     permissions:
       contents: write  #  for mike to push
     name: Deploy Docs through mike
