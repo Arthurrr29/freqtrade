@@ -23,6 +23,8 @@ permissions:
 jobs:
   build-and-push:
     name: "Build and Push Devcontainer Image"
+    # Publishing the shared development image is an upstream maintenance task.
+    if: ${{ github.repository == 'freqtrade/freqtrade' }}
     permissions:
       packages: write  # Needed to push package versions
     runs-on: ubuntu-latest

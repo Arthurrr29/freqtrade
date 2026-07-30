@@ -6,7 +6,6 @@ on:
       - stable
       - develop
       - ci/*
-    tags:
   release:
     types: [published]
   pull_request:
@@ -21,6 +20,8 @@ permissions: {}
 jobs:
   tests:
     name: "Tests and Linting"
+    # Scheduled maintenance belongs to upstream. Forks still run CI on pushes and PRs.
+    if: ${{ github.event_name != 'schedule' || github.repository == 'freqtrade/freqtrade' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -87,13 +88,13 @@ jobs:
         pytest --random-order --cov=freqtrade --cov=freqtrade_client --cov-config=.coveragerc
 
     - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
-      if: (runner.os == 'Linux' && matrix.python-version == '3.12' && matrix.os == 'ubuntu-24.04')
+      if: ${{ github.repository == 'freqtrade/freqtrade' && runner.os == 'Linux' && matrix.python-version == '3.12' && matrix.os == 'ubuntu-24.04' }}
       with:
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}  # zizmor: ignore[secrets-outside-env] Intentionally not using environment variable.
 
     - name: Cleanup codecov dirty state files
-      if: (runner.os == 'Linux' && matrix.python-version == '3.12' && matrix.os == 'ubuntu-24.04')
+      if: ${{ github.repository == 'freqtrade/freqtrade' && runner.os == 'Linux' && matrix.python-version == '3.12' && matrix.os == 'ubuntu-24.04' }}
       run: |
         # See https://github.com/codecov/codecov-action/issues/1851
         rm -rf codecov codecov.SHA256SUM codecov.SHA256SUM.sig
@@ -178,7 +179,7 @@ jobs:
 
     - name: Discord notification
       uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708 # v1.16.0
-      if: ${{ failure() && ( github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
+      if: ${{ github.repository == 'freqtrade/freqtrade' && failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
       with:
           color: '#FF0000' # red
           title: Freqtrade CI failed on ${{ matrix.os }} with Python ${{ matrix.python-version }}!
@@ -186,6 +187,7 @@ jobs:
 
   mypy-version-check:
     name: "Mypy Version Check"
+    if: ${{ github.event_name != 'schedule' || github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -206,6 +208,7 @@ jobs:
 
   pre-commit:
     name: "Pre-commit checks"
+    if: ${{ github.event_name != 'schedule' || github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -221,6 +224,7 @@ jobs:
 
   docs-check:
     name: "Documentation build"
+    if: ${{ github.event_name != 'schedule' || github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -245,7 +249,7 @@ jobs:
 
     - name: Discord notification
       uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708 # v1.16.0
-      if: failure() && ( github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+      if: ${{ github.repository == 'freqtrade/freqtrade' && failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
       with:
           color: '#FF0000' # red
           title: Freqtrade doc test failed!
@@ -255,6 +259,8 @@ jobs:
   build-linux-online:
     # Run pytest with "live" checks
     name: "Online / live tests"
+    # The upstream suite relies on external exchange connectivity and a project proxy.
+    if: ${{ github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -307,7 +313,7 @@ jobs:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}  # zizmor: ignore[secrets-outside-env] Intentionally not using environment variable.
 
   build:
-    if: always()
+    if: ${{ always() && (github.event_name != 'schedule' || github.repository == 'freqtrade/freqtrade') }}
     name: "Build"
     needs: [
       tests,
@@ -368,7 +374,7 @@ jobs:
     name: "Publish Python 🐍 distribution 📦 to TestPyPI"
     needs: [ build ]
     runs-on: ubuntu-22.04
-    if: (github.event_name == 'release')
+    if: ${{ github.repository == 'freqtrade/freqtrade' && github.event_name == 'release' }}
     environment:
       name: testpypi
       url: https://test.pypi.org/p/freqtrade
@@ -397,7 +403,7 @@ jobs:
     name: "Publish Python 🐍 distribution 📦 to PyPI"
     needs: [ build ]
     runs-on: ubuntu-22.04
-    if: (github.event_name == 'release')
+    if: ${{ github.repository == 'freqtrade/freqtrade' && github.event_name == 'release' }}
     environment:
       name: pypi
       url: https://pypi.org/p/freqtrade

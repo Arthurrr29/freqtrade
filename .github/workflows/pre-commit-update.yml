@@ -16,6 +16,8 @@ concurrency:
 jobs:
   auto-update:
     name: Auto-update pre-commit hooks
+    # Creating dependency PRs requires the upstream bot token and labels.
+    if: ${{ github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-latest
     environment:
       name: develop

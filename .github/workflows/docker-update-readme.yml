@@ -15,6 +15,7 @@ permissions: {}
 jobs:
   dockerHubDescription:
     name: "Update Docker Hub Description"
+    if: ${{ github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-latest
     environment:
       name: docker

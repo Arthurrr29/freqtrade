@@ -16,6 +16,8 @@ permissions:
 jobs:
   auto-update:
     name: "Auto Update Binance Leverage Tiers"
+    # This maintenance task uses upstream-only credentials and network access.
+    if: ${{ github.repository == 'freqtrade/freqtrade' }}
     runs-on: ubuntu-latest
     environment:
       name: develop
